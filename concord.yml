@@ -14,7 +14,7 @@ flows:
      method: GET
      url: ${url}/rbac-api/v1/groups
      headers:
-       X-Concord-SessionToken: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
+       X-Authentication: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
      response: "json"
      ignoreSslErrors: true
     out: rsp
@@ -52,7 +52,7 @@ flows:
          method: DELETE
          url: ${url}/rbac-api/v1/groups/${groupId}
          headers:
-           X-Concord-SessionToken: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
+           X-Authentication: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
          ignoreSslErrors: true
         out: deleteRsp
       - log: "Delete response: ${deleteRsp.statusCode}"
