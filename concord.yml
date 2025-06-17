@@ -26,7 +26,7 @@ flows:
       import json
       response_data = rsp['content']
       group_id = None
-      for group in response_data.get('results', []):
+      for group in response_data:
           if group.get('display_name') == groupName:
               group_id = group.get('id')
               break
