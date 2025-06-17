@@ -3,11 +3,15 @@ configuration:
   - "mvn://org.python:jython-standalone:2.7.4"
   runtime: "concord-v2"
 
+forms:
+  Concord:
+  - group: { label: "Group Name", type: "string" }
+
 flows:
   default:
+  - form: Concord
   - set:
-      date: "${datetime.format(datetime.current(), 'dd_MM_yyyy')}"
-      groupName: "test"
+      groupName: "${Concord.group}"
       url: "https://puppet-enterprice.local:4433"
   - task: http
     in:
