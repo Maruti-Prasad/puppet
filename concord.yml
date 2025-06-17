@@ -1,0 +1,60 @@
+configuration:
+  dependencies:
+  - "mvn://org.python:jython-standalone:2.7.4"
+  runtime: "concord-v2"
+
+flows:
+  default:
+  - set:
+      date: "${datetime.format(datetime.current(), 'dd_MM_yyyy')}"
+      groupName: "test"
+      url: "https://puppet-enterprice.local:4433"
+  - task: http
+    in:
+     method: GET
+     url: ${url}/rbac-api/v1/groups
+     headers:
+       X-Concord-SessionToken: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
+     response: "json"
+     ignoreSslErrors: true
+    out: rsp
+     
+  - log: "statusCode: ${rsp.content}"
+
+  - script: python
+    body: |
+      import json
+      response_data = rsp['content']
+      group_id = None
+      for group in response_data.get('results', []):
+          if group.get('display_name') == groupName:
+              group_id = group.get('id')
+              break
+      if group_id is None:
+          print("Group '{}' not found".format(groupName))
+          result.set('groupId', "")  # Set empty string instead of None
+          result.set('foundGroup', False)
+      else:
+          print("Found group '{}' with ID: {}".format(groupName, group_id))
+          result.set('groupId', str(group_id))  # Convert to string
+          result.set('foundGroup', True)
+    out:
+      groupId: "${result.groupId}"
+      foundGroup: "${result.foundGroup}"
+
+
+  - if: ${foundGroup}
+    then:
+      - log: "Group ID found: ${groupId}"
+      # Add your delete logic here
+      - task: http
+        in:
+         method: DELETE
+         url: ${url}/rbac-api/v1/groups/${groupId}
+         headers:
+           X-Concord-SessionToken: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
+         ignoreSslErrors: true
+        out: deleteRsp
+      - log: "Delete response: ${deleteRsp.statusCode}"
+    else:
+      - log: "Cannot delete group - group not found"
