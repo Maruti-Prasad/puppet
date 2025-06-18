@@ -8,7 +8,7 @@ forms:
   - group: { label: "Group Name", type: "string" }
 
 flows:
-  puppet:
+  default:
   - form: Concord
   - set:
       groupName: "${Concord.group}"
@@ -50,71 +50,13 @@ flows:
   - if: ${foundGroup}
     then:
       - log: "Group ID found: ${groupId}"
+      # Add your delete logic here
       - task: http
         in:
          method: DELETE
          url: ${url}/rbac-api/v1/groups/${groupId}
          headers:
            X-Authentication: ALAaH-9sWg9JiNhGoGgJ0wVCrjc3pMWty0oYyfRkTFRQ
-         ignoreSslErrors: true
-        out: deleteRsp
-      - log: "Delete response: ${deleteRsp.statusCode}"
-    else:
-      - log: "Cannot delete group - group not found"
-
-  foreman:
-  - form: Concord
-  - set:
-      groupName: "${Concord.group}"
-      url: "https://192.168.56.10"
-  - task: http
-    in:
-     method: GET
-     auth:
-      basic:
-        username: "admin"
-        password: "_FJxZfySmLXIr9AtjhWOfQ"
-     url: ${url}/api/usergroups
-     response: "json"
-     ignoreSslErrors: true
-    out: rsp
-     
-  - log: "statusCode: ${rsp.content}"
-
-  - script: python
-    body: |
-      import json
-      response_data = rsp['content']
-      group_id = None
-      for group in response_data.get('results', []):
-          if group.get('name') == groupName:
-              group_id = group.get('id')
-              break
-      if group_id is None:
-          print("Group '{}' not found".format(groupName))
-          result.set('groupId', "")  # Set empty string instead of None
-          result.set('foundGroup', False)
-      else:
-          print("Found group '{}' with ID: {}".format(groupName, group_id))
-          result.set('groupId', str(group_id))  # Convert to string
-          result.set('foundGroup', True)
-    out:
-      groupId: "${result.groupId}"
-      foundGroup: "${result.foundGroup}"
-
-
-  - if: ${foundGroup}
-    then:
-      - log: "Group ID found: ${groupId}"
-      # Add your delete logic here
-      - task: http
-        in:
-         method: DELETE
-         auth:
-          basic:
-            username: "admin"
-            password: "_FJxZfySmLXIr9AtjhWOfQ"
-         url: ${url}/api/usergroups/${groupId}
          ignoreSslErrors: true
         out: deleteRsp
       - log: "Delete response: ${deleteRsp.statusCode}"
